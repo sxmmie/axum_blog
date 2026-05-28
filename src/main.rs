@@ -7,9 +7,23 @@ use axum::{
     routing::{get, post},
 };
 use serde::{Deserialize, Serialize};
+use sqlx::postgres::PgPoolOptions;
 
 #[tokio::main]
 async fn main() {
+    dotenvy::dotenv().ok();
+
+    // Declare env variable
+    let database_url = std::env::var("DATABASE_URL").expect("database is missing in env");
+    let server_address = std::env::var("SERVER_ADDRESS").unwrap_or("127.0.0.1:7870".to_string());
+
+    // connect to db using connection pool
+    let db_connection_pool = PgPoolOptions::new()
+        .max_connections(15)
+        .connect(&database_url)
+        .await
+        .expect("database not connected");
+
     // build our application with a single route
     let app = Router::new()
         .route("/", get(hello_post))
