@@ -2,12 +2,14 @@ use std::collections::HashMap;
 
 use axum::{
     Json, Router,
-    extract::{Path, Query},
+    extract::{Path, Query, State},
+    http::StatusCode,
     response::IntoResponse,
     routing::{get, post},
 };
 use serde::{Deserialize, Serialize};
-use sqlx::postgres::PgPoolOptions;
+use serde_json::json;
+use sqlx::{PgPool, postgres::PgPoolOptions};
 
 #[tokio::main]
 async fn main() {
@@ -29,11 +31,13 @@ async fn main() {
         .route("/", get(hello_post))
         .route("/user/{user_id}", get(path_extractor))
         .route("/query", get(query_extractor))
-        .route("/json", post(request_body));
+        .route("/json", post(request_body))
+        .route("/players", get(get_players))
+        .with_state(db_connection_pool);
 
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    println!("server running in 3000");
+    let listener = tokio::net::TcpListener::bind(server_address).await.unwrap();
+    println!("server running in 7879");
     axum::serve(listener, app).await.unwrap();
 }
 
@@ -54,6 +58,28 @@ async fn request_body(Json(payload): Json<User>) -> Json<User> {
     };
 
     Json(rs)
+}
+
+#[derive(Serialize)]
+struct PlayerRow {
+    name: String,
+    age: i32,
+    wing: i32,
+    player_id: i32,
+}
+
+async fn get_players(State(pg_connection_pool): State<PgPool>) -> Result<(StatusCode, String), (StatusCode, String)> {
+    let rows = sqlx::query_as!(PlayerRow, r#"SELECT * FROM players ORDER BY player_id"#)
+        .fetch_all(&pg_connection_pool)
+        .await
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                json!({"success": false, "message": e.to_string()}).to_string(),
+            )
+        })?;
+
+    Ok((StatusCode::OK, json!({"success": true, "data": rows}).to_string()))
 }
 
 // IntoResponseTrait converts any function into HTTP response in the client
