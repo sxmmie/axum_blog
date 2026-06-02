@@ -8,8 +8,6 @@ use axum::{
     routing::{get, post},
 };
 use serde::{Deserialize, Serialize};
-use serde_json::json;
-use sqlx::PgPool;
 
 use crate::{db::init_db, routemount::route::create_router};
 
@@ -30,7 +28,7 @@ async fn main() {
     let db_pool = init_db(&database_url).await; // init_db receives reference
     let app = create_router(db_pool);
 
-    // run our app with hyper, listening globally on port 3000
+    // Listeners - run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind(server_address).await.unwrap();
     println!("server running in 7879");
     axum::serve(listener, app).await.unwrap();
