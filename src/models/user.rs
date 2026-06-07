@@ -6,3 +6,5 @@ pub struct User {
     pub age: u32,
     pub is_tall: bool,
 }
+
+pub struct LoginUser {}
