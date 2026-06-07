@@ -15,6 +15,7 @@ mod db;
 mod models;
 mod routemount;
 mod routes; // routes
+mod utils;
 
 #[tokio::main]
 async fn main() {
