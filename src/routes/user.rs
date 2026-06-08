@@ -1,16 +1,35 @@
 use axum::Json;
 use axum::{extract::State, http::StatusCode};
+use bcrypt::hash;
 use chrono::Duration;
 use chrono::Utc;
 use jsonwebtoken::{EncodingKey, Header, encode};
 use serde_json::{Value, json};
 use sqlx::PgPool;
 
-use crate::models::user::LoginUser;
+use crate::models::user::{LoginUser, RegisterUser};
 use crate::utils::jwt::Claims;
 
-pub async fn register_user(State(pg): State<PgPool>, Json(payload): Json<RegisterUser>) -> Result<(StatusCode, String), (StatusCode, String)> {}
+pub async fn register_user(State(pg): State<PgPool>, Json(payload): Json<RegisterUser>) -> Result<(StatusCode, String), (StatusCode, String)> {
+    let hashed = hash(payload.password, 12).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+    let user = sqlx::query_as!(
+        User,
+        r#"INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, password_hash"#,
+        payload.name,
+        payload.email,
+        hashed
+    )
+    .fetch_optional(&pg)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+    .ok_or_else(|| (StatusCode::CONFLICT, "Email already registered".to_string()))?;
+
+    // Ok((StatusCode::CREATED, Json(user)));
+    Ok(Json(user))
+}
+
+// Login Method
 pub async fn login_user(State(pg): State<PgPool>, Json(payload): Json<LoginUser>) -> Result<Json<Value>, (StatusCode, String)> {
     let user_opt = sqlx::query_as!(User, "SELECT * FROM users WHERE email = $1", payload.email)
         .fetch_optional(&pg)
