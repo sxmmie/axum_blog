@@ -8,3 +8,9 @@ pub struct User {
 }
 
 pub struct LoginUser {}
+
+pub struct RegisterUser {
+    pub name: String,
+    pub email: String,
+    pub password: String,
+}
