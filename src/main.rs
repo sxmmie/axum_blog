@@ -1,14 +1,3 @@
-use std::collections::HashMap;
-
-use axum::{
-    Json, Router,
-    extract::{Path, Query, State},
-    http::StatusCode,
-    response::IntoResponse,
-    routing::{get, post},
-};
-use serde::{Deserialize, Serialize};
-
 use crate::{db::init_db, routemount::route::create_router};
 
 mod db;
