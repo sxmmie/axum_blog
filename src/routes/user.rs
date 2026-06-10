@@ -1,6 +1,6 @@
 use axum::Json;
 use axum::{extract::State, http::StatusCode};
-use bcrypt::hash;
+use bcrypt::{hash, verify};
 use chrono::Duration;
 use chrono::Utc;
 use jsonwebtoken::{EncodingKey, Header, encode};
