@@ -1,5 +1,8 @@
 use axum::Json;
 use axum::{extract::State, http::StatusCode};
+use axum_extra::TypedHeader;
+use axum_extra::headers::Authorization;
+use axum_extra::headers::authorization::Bearer;
 use bcrypt::{hash, verify};
 use chrono::Duration;
 use chrono::Utc;
@@ -7,8 +10,8 @@ use jsonwebtoken::{EncodingKey, Header, encode};
 use serde_json::{Value, json};
 use sqlx::PgPool;
 
-use crate::models::user::{LoginUser, RegisterUser};
-use crate::utils::jwt::Claims;
+use crate::models::user::{LoginUser, RegisterUser, User};
+use crate::utils::jwt::{Claims, verify_auth_token};
 
 pub async fn register_user(State(pg): State<PgPool>, Json(payload): Json<RegisterUser>) -> Result<(StatusCode, String), (StatusCode, String)> {
     let hashed = hash(payload.password, 12).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -62,4 +65,16 @@ pub async fn login_user(State(pg): State<PgPool>, Json(payload): Json<LoginUser>
     let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes())).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     Ok(Json(json!({"token": token})))
+}
+
+pub async fn protected_route(State(pg): State<PgPool>, TypedHeader(auth): TypedHeader<Authorization<Bearer>>) -> Result<Json<User>, StatusCode> {
+    let claims = verify_auth_token(TypedHeader(auth)).await?;
+    println!("{:?}", claims);
+
+    let user = sqlx::query_as!(User, "SELECT * FROM users WHERE email = $1", claims.sub)
+        .fetch_one(&pg)
+        .await
+        .map_err(|_| StatusCode::UNAUTHORIZED)?;
+
+    Ok(Json(user))
 }
