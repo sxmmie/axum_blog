@@ -13,6 +13,7 @@ pub struct Claims {
     pub exp: usize,
 }
 
+// TypedHeader is an Extractor(we want to extract theauthorization which is in form of bearer token)
 pub async fn verify_auth_token(TypedHeader(auth): TypedHeader<Authorization<Bearer>>) -> Result<Claims, StatusCode> {
     // extra raw token in a string
     let token = auth.token();
@@ -21,5 +22,7 @@ pub async fn verify_auth_token(TypedHeader(auth): TypedHeader<Authorization<Bear
     let secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "my_secret".into());
 
     // attempt to decode and validate token
-    let token_data = decode(token, &DecodingKey::from_secret(secret.as_bytes), &Validation::default()).map_err(|_| StatusCode::UNAUTHORIZED)
+    let token_data = decode(token, &DecodingKey::from_secret(secret.as_bytes()), &Validation::default()).map_err(|_| StatusCode::UNAUTHORIZED)?;
+
+    Ok(token_data.claims)
 }
