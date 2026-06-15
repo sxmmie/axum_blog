@@ -1,7 +1,7 @@
 use axum::{
-    Json,
-    http::StatusCode,
-    response::{IntoResponse, Response},
+    Json,                               // Used to return JSON responses
+    http::StatusCode,                   // HTTP status enums (200, 400, 500, etc)
+    response::{IntoResponse, Response}, // Trait + typee for converting errors into HTTP responses
 };
 use serde_json::json;
 use thiserror::Error;
