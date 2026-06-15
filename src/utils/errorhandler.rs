@@ -6,23 +6,35 @@ use axum::{
 use serde_json::json;
 use thiserror::Error;
 
+// Define a custom error type for the entire application
 #[derive(Debug, Error)]
 pub enum AppError {
+    // Automatically convert sqlx::Error -> AppError::SqlxErrir using the #[from] attribute
+    // Convert sqlx::Error automatically into this variant using #[from]
+    // This lets you use "?" after SQL Queries
     #[error("Database query failed: {0}")]
     SqlxError(#[from] sqlx::Error),
 
+    // Error for invalid client input (400)
+    // #[error(Bad Request:) {0}]:
+    // Defines the human-readable error message {0} inserts the inner value of the enum variant
+    // Used when you call: error.to_string() or print the error
     #[error("Bad request: {0}")]
     BadRequest(String),
 
+    // Error fir unauthorized requests (401)
     #[error("Unauthorized: {0}")]
     Unauthorized(String),
 
+    // Error for unauthenticated requests (401)
     #[error("Forbidden: {0}")]
     Forbidden(String),
 
+    // Validation error shortcut (also 400)
     #[error("Validation error: {0}")]
     ValidationError(String),
 
+    // Generic fallback error
     #[error("Unexpected server error")]
     Unexpected,
 }
