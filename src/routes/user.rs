@@ -1,4 +1,5 @@
 use axum::Json;
+use axum::extract::Query;
 use axum::{extract::State, http::StatusCode};
 use axum_extra::TypedHeader;
 use axum_extra::headers::Authorization;
@@ -8,7 +9,7 @@ use chrono::Duration;
 use chrono::Utc;
 use jsonwebtoken::{EncodingKey, Header, encode};
 use serde_json::{Value, json};
-use sqlx::PgPool;
+use sqlx::{PgPool, QueryBuilder};
 
 use crate::models::user::{LoginUser, RegisterUser, User};
 use crate::utils::errorhandler::AppError;
@@ -86,4 +87,15 @@ pub async fn protected_route(State(pg): State<PgPool>, TypedHeader(auth): TypedH
         .map_err(|_| AppError::unauthorized("you are not permitted to access this resource"))?;
 
     Ok(Json(user))
+}
+
+pub async fn get_users(State(pg): State<PgPool>, Query(params): Query<UserQueryParams>) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    // For every pagination, there is pageSize and Limit
+    let page = params.page.unwrap_or(1);
+    let limit = params () it.unwrap_or(10);
+    let offset = (page -1) * limit;
+
+    let mut query_builder = QueryBuilder::new("SELECT * FROM users WHERE 1=1");
+
+    // 
 }
