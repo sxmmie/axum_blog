@@ -30,6 +30,9 @@ pub enum AppError {
     #[error("Forbidden: {0}")]
     Forbidden(String),
 
+    #[error("NotFound: {0}")]
+    NotFound(String),
+
     // Validation error shortcut (also 400)
     #[error("Validation error: {0}")]
     ValidationError(String),
@@ -60,8 +63,14 @@ impl AppError {
     pub fn validation<T: Into<String>>(msg: T) -> Self {
         AppError::ValidationError(msg.into())
     }
+
+    pub fn not_found<T: Into<String>>(msg: T) -> Self {
+        AppError::NotFound(msg.into())
+    }
 }
 
+// Allow AppError to be converted directly into an Axum HTTP response
+// IntoResponse is an Axum trait that lets a type be automatically converted into an HTTP response
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, message) = match &self {
@@ -72,6 +81,8 @@ impl IntoResponse for AppError {
             AppError::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, msg.clone()),
 
             AppError::Forbidden(msg) => (StatusCode::FORBIDDEN, msg.clone()),
+
+            AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg.clone()),
 
             AppError::ValidationError(msg) => (StatusCode::BAD_REQUEST, msg.clone()),
 

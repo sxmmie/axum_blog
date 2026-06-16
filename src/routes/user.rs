@@ -11,6 +11,7 @@ use serde_json::{Value, json};
 use sqlx::PgPool;
 
 use crate::models::user::{LoginUser, RegisterUser, User};
+use crate::utils::errorhandler::AppError;
 use crate::utils::jwt::{Claims, verify_auth_token};
 
 pub async fn register_user(State(pg): State<PgPool>, Json(payload): Json<RegisterUser>) -> Result<(StatusCode, String), (StatusCode, String)> {
@@ -33,7 +34,15 @@ pub async fn register_user(State(pg): State<PgPool>, Json(payload): Json<Registe
 }
 
 // Login Method
-pub async fn login_user(State(pg): State<PgPool>, Json(payload): Json<LoginUser>) -> Result<Json<Value>, (StatusCode, String)> {
+pub async fn login_user(State(pg): State<PgPool>, Json(payload): Json<LoginUser>) -> Result<Json<Value>, AppError> {
+    if payload.email.trim().is_empty() {
+        return Err(AppError::bad_request("Email is required"));
+    }
+
+    if payload.password.trim().is_empty() {
+        return Err(AppError::bad_request("Password is required"));
+    }
+
     let user_opt = sqlx::query_as!(User, "SELECT * FROM users WHERE email = $1", payload.email)
         .fetch_optional(&pg)
         .await
