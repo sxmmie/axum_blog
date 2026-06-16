@@ -46,18 +46,18 @@ pub async fn login_user(State(pg): State<PgPool>, Json(payload): Json<LoginUser>
     let user_opt = sqlx::query_as!(User, "SELECT * FROM users WHERE email = $1", payload.email)
         .fetch_optional(&pg)
         .await
-        .map_err(|_| (StatusCode::UNAUTHORIZED, "invalid credentials".to_string()))?;
+        .map_err(|e| AppError::from(e))?;
 
     let user = match user_opt {
         Some(u) => u,
-        None => return Err((StatusCode::UNAUTHORIZED, "invalid credentials".into())),
+        None => return Err(AppError::not_found("user not found")),
     };
 
     // validate user provided password against password stored in the DB
-    let valid = verify(&payload.password, &user.password_hash).map_err(|_| (StatusCode::UNAUTHORIZED, "invalid password".to_string()))?;
+    let valid = verify(&payload.password, &user.password_hash).map_err(|_| AppError::unauthorized("invalid credentials"))?;
 
     if !valid {
-        return Err((StatusCode::UNAUTHORIZED, "invalid password".into()));
+        return Err(AppError::unauthorized("invalid credentials"))?;
     }
 
     let secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "mysecret".into()); // mysecret is the fallback
@@ -71,7 +71,7 @@ pub async fn login_user(State(pg): State<PgPool>, Json(payload): Json<LoginUser>
     };
 
     // compose token
-    let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes())).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes())).map_err(|_| AppError::Unexpected)?;
 
     Ok(Json(json!({"token": token})))
 }
@@ -83,7 +83,7 @@ pub async fn protected_route(State(pg): State<PgPool>, TypedHeader(auth): TypedH
     let user = sqlx::query_as!(User, "SELECT * FROM users WHERE email = $1", claims.sub)
         .fetch_one(&pg)
         .await
-        .map_err(|_| StatusCode::UNAUTHORIZED)?;
+        .map_err(|_| AppError::unauthorized("you are not permitted to access this resource"))?;
 
     Ok(Json(user))
 }
