@@ -9,7 +9,7 @@ use chrono::Duration;
 use chrono::Utc;
 use jsonwebtoken::{EncodingKey, Header, encode};
 use serde_json::{Value, json};
-use sqlx::{PgPool, QueryBuilder};
+use sqlx::{PgPool, QueryBuilder, query_builder};
 
 use crate::models::user::{LoginUser, RegisterUser, User};
 use crate::utils::errorhandler::AppError;
@@ -97,5 +97,25 @@ pub async fn get_users(State(pg): State<PgPool>, Query(params): Query<UserQueryP
 
     let mut query_builder = QueryBuilder::new("SELECT * FROM users WHERE 1=1");
 
-    // 
+    // name filter
+    if let Some(name) = params.name{
+        query_builder.push(" AND name ILIKE ");
+        query_builder.push_bind(format!("%{}%", name))
+    }
+
+    // email filter
+    if let Some(email) = params.email{
+        query_builder.push(" AND name ILIKE ");
+        query_builder.push_bind(format!("%{}%", email))
+    }
+
+    query_builde.push(" ORDER BY id DESC ");
+    query_builde.push(" LIMIT ");
+    query_builde.push_bind(limit);
+    query_builde.push(" OFFSET ");
+    query_builder.push_bind(offset);
+
+    let query = query_builder.build_query_as()::<>(User);
+
+    let users = query.fetch_all(executor);
 }
