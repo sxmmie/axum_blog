@@ -115,7 +115,19 @@ pub async fn get_users(State(pg): State<PgPool>, Query(params): Query<UserQueryP
     query_builde.push(" OFFSET ");
     query_builder.push_bind(offset);
 
-    let query = query_builder.build_query_as()::<>(User);
+    let query = query_builder.build_query_as()::<User>();
 
-    let users = query.fetch_all(executor);
+    let users = query.fetch_all(&pg).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let total_count = sqlx::query_scalar!("SELECT COUNT(*) FROM users ").fetch_one(&pg).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // build response in form of JSON
+    let response = serde_json::json!({
+        "page": page,
+        "limit": limit,
+        "total": total_count,
+        "data": users
+    });
+
+    Ok(Json(response))
 }
