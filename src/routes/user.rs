@@ -9,7 +9,7 @@ use chrono::Duration;
 use chrono::Utc;
 use jsonwebtoken::{EncodingKey, Header, encode};
 use serde_json::{Value, json};
-use sqlx::{PgPool, QueryBuilder, query_builder};
+use sqlx::{PgPool};
 
 use crate::models::user::{LoginUser, RegisterUser, User};
 use crate::utils::errorhandler::AppError;
