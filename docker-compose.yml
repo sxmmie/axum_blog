@@ -1,28 +1,28 @@
 services:
   db:
     image: postgres:15
-    container_name: db
+    container_name: axumblogdb
     ports:
       - 5432:5432
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: axumlive_db
+      POSTGRES_DB: axum_lite
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d axumlive_db"]
+      test: ["CMD-SHELL", "pg_isready -U user -d axum_lite"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   app:
-    container_name: axum_api
+    container_name: axum_blog_api
     build: .
     ports:
       - "7870:7870"
     environment:
-      - DATABASE_URL=postgres://user:password@db:5432/axumlive_db
+      - DATABASE_URL=postgres://user:password@db:5432/axum_lite
     depends_on:
       db:
         condition: service_healthy
