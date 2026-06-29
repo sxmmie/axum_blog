@@ -7,7 +7,10 @@ pub struct User {
     pub is_tall: bool,
 }
 
-pub struct LoginUser {}
+pub struct LoginUser {
+    pub email: String,
+    pub password: String,
+}
 
 pub struct RegisterUser {
     pub name: String,
