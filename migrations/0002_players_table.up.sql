@@ -1,4 +1,6 @@
 CREATE TABLE IF NOT EXISTS players (
-    id SERIAL PRIMARY KEY,
-    user_id 
+    player_id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    age INTEGER NOT NULL,
+    wing INTEGER NOT NULL
 )

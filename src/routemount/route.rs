@@ -11,9 +11,7 @@ use crate::routes::{
 
 pub fn create_router(pool: PgPool) -> Router {
     Router::new()
-        .route("/players", get(get_players))
-        .with_state(pool)
-        .route("/palyers", post(create_player))
+        .route("/players", get(get_players).post(create_player))
         .route("/login", post(login_user))
         .route("/register", post(register_user))
         .route("/protected", get(protected_route))
