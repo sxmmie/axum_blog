@@ -25,3 +25,13 @@ pub async fn create_player(State(pg): State<PgPool>, Json(player): Json<CreatePl
 
     Ok((StatusCode::OK, json!({"success": true, "data": row}).to_string()))
 }
+
+pub async fn get_player(State(pg): State<PgPool>, Json(player): Json<CreatePlayerReq>) -> Result<(StatusCode, String), (StatusCode, String)> {
+    let row = sqlx::query_as::<_, PlayerRow>("SELECT name, age, wing FROM users WHERE id = $1")
+        .bind(&player.name)
+        .bind(player.age)
+        .bind(player.wing)
+        .fetch_one(&pg)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, json!({"success": false, "message": e.to_string()}).to_string()))?;
+}
