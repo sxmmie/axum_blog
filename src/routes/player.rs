@@ -34,4 +34,6 @@ pub async fn get_player(State(pg): State<PgPool>, Json(player): Json<CreatePlaye
         .fetch_one(&pg)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, json!({"success": false, "message": e.to_string()}).to_string()))?;
+
+    Ok((StatusCode::OK, json!({"success": true, "data": row}).to_string()))
 }
