@@ -37,3 +37,11 @@ pub async fn get_player(State(pg): State<PgPool>, Json(player): Json<CreatePlaye
 
     Ok((StatusCode::OK, json!({"success": true, "data": row}).to_string()))
 }
+
+pub async fn update_player(State(pg): State<PgPool>, Json(player): Json<CreatePlayerReq>) -> Result<(StatusCode, String), (StatusCode, String)> {
+    let row = sqlx::query_as::<_, PlayerRow>("")
+        .bind(value)
+        .await
+
+    Ok((StatusCode::OK, json!({"success": true, "data": row}).to_string()))
+}
