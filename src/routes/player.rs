@@ -2,7 +2,7 @@ use axum::{Json, extract::State, http::StatusCode};
 use serde_json::json;
 use sqlx::PgPool;
 
-use crate::models::player::{CreatePlayerReq, PlayerRow};
+use crate::models::player::{CreatePlayerReq, PlayerRow, UpdatePlayerReq};
 
 // pg == pg_connection_pool
 pub async fn get_players(State(pg): State<PgPool>) -> Result<(StatusCode, String), (StatusCode, String)> {
@@ -38,7 +38,7 @@ pub async fn get_player(State(pg): State<PgPool>, Json(player): Json<CreatePlaye
     Ok((StatusCode::OK, json!({"success": true, "data": row}).to_string()))
 }
 
-pub async fn update_player(State(pg): State<PgPool>, Json(player): Json<CreatePlayerReq>) -> Result<(StatusCode, String), (StatusCode, String)> {
+pub async fn update_player(State(pg): State<PgPool>, Json(player): Json<UpdatePlayerReq>) -> Result<(StatusCode, String), (StatusCode, String)> {
     let row = sqlx::query_as::<_, PlayerRow>("")
         .bind(value)
         .await
