@@ -14,3 +14,9 @@ pub struct CreatePlayerReq {
     pub age: i32,
     pub wing: i32,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct UpdatePlayerReq {
+    pub name: String,
+    pub wing: i32,
+}
